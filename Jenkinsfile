@@ -1,24 +1,33 @@
 pipeline {
     agent any
+
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-cred')
-        IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-cred') //Tạo trong Jenkins
+        IMAGE_REPO = "mytruong28022004/main"
     }
+
     stages {
-        stage('Build Docker Image') {
+        stage('Checkout') {
             steps {
                 script {
-                    docker.build("mytruong28022004/main:${IMAGE_TAG}", "./main")
+                    COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                 }
+                checkout scm
             }
         }
-        stage('Push to DockerHub') {
+
+        stage('Build Docker Image') {
             steps {
-                script {
-                    docker.withRegistry("https://index.docker.io/v1/", "docker-hub-cred") {
-                        docker.image("mytruong28022004/main:${IMAGE_TAG}").push()
-                    }
-                }
+                sh 'docker build -t $IMAGE_REPO:$COMMIT_ID .'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh """
+                  echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
+                  docker push $IMAGE_REPO:$COMMIT_ID
+                """
             }
         }
     }
