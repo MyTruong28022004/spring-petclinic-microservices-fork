@@ -1,0 +1,24 @@
+pipeline {
+    agent any
+    environment {
+        IMAGE_NAME = "mytruong28022004/servicename"
+        COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+    }
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t $IMAGE_NAME:$COMMIT_ID ."
+                }
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
+                    sh "docker push $IMAGE_NAME:$COMMIT_ID"
+                }
+            }
+        }
+    }
+}
