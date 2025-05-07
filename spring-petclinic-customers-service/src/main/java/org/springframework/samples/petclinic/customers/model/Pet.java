@@ -53,7 +53,7 @@ public class Pet {
     @JoinColumn(name = "owner_id")
     @JsonIgnore
     private Owner owner;
-//LaLa
+
     @Override
     public String toString() {
         return new ToStringCreator(this)
