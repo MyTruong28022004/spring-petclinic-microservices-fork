@@ -31,7 +31,7 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                sh 'echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin'
             }
         }
 
