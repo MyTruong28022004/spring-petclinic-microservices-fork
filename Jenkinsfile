@@ -18,11 +18,16 @@ pipeline {
     stage('Detect Changed Services') {
       steps {
         script {
+          // Lấy commit trước đó nếu không có HEAD^
+          def prevCommit = sh(script: 'git rev-parse HEAD^ || git rev-parse HEAD', returnStdout: true).trim()
+          
+          // Lấy danh sách file thay đổi giữa commit hiện tại và commit trước đó
           def changedFiles = sh(
-            script: 'git diff --name-only $(git rev-list -n 1 HEAD^) HEAD || true',
+            script: "git diff --name-only ${prevCommit} HEAD",
             returnStdout: true
           ).trim().split("\n")
           
+          // Danh sách các service có trong repo
           def services = [
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
@@ -30,10 +35,12 @@ pipeline {
             'spring-petclinic-genai-service'
           ]
 
+          // Lọc các service có file thay đổi
           def changedServices = services.findAll { service ->
             changedFiles.any { it.startsWith("${service}/") }
           }
 
+          // In ra các service đã thay đổi
           echo "Changed services: ${changedServices}"
           env.CHANGED_SERVICES = changedServices.join(',')
         }
@@ -51,38 +58,39 @@ pipeline {
       }
     }
 
-   stage('Build & Push Changed Services') {
+    stage('Build & Push Changed Services') {
       when {
         expression { return env.CHANGED_SERVICES?.trim() }
       }
       steps {
         script {
           def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-          def changedServices = env.CHANGED_SERVICES.split(',')
-    
-          // Di chuyển về thư mục gốc nơi chứa Dockerfile
-          dir("${env.WORKSPACE}") {
-            for (service in changedServices) {
-              echo "Building and pushing image for: ${service}"
-    
-              sh """
-                docker build -f Dockerfile \\
-                  --build-arg SERVICE=${service} \\
-                  -t ${IMAGE_NAME}/${service}:${commitId} \\
-                  -t ${IMAGE_NAME}/${service}:latest \\
-                  .
-              """
-    
-              withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS_ID}") {
-                sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
-                sh "docker push ${IMAGE_NAME}/${service}:latest"
-              }
+          def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
+
+          // Build và Push cho từng service đã thay đổi
+          changedServices.each { service ->
+            echo "Building and pushing image for: ${service}"
+
+            // Xây dựng Docker image cho service
+            sh """
+              docker build -f Dockerfile \\
+                --build-arg SERVICE=${service} \\
+                -t ${IMAGE_NAME}/${service}:${commitId} \\
+                -t ${IMAGE_NAME}/${service}:latest \\
+                .
+            """
+
+            // Đẩy image lên Docker Hub
+            withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS_ID}") {
+              sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
+              sh "docker push ${IMAGE_NAME}/${service}:latest"
             }
           }
         }
       }
     }
 
+  }
   post {
     always {
       echo "Cleaning up Docker images..."
