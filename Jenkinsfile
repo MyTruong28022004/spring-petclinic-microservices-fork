@@ -1,33 +1,26 @@
 pipeline {
     agent any
-
-    environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-cred') //Tạo trong Jenkins
-        IMAGE_REPO = "mytruong28022004/main"
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
     }
-
     stages {
         stage('Checkout') {
             steps {
+                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/spring-petclinic/spring-petclinic-microservices-fork.git'
+            }
+        }
+        stage('Build & Push Docker Images') {
+            steps {
                 script {
-                    COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    def commitId = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
+                    def services = ['spring-petclinic-customers-service', 'spring-petclinic-vets-service', 'spring-petclinic-visits-service', 'spring-petclinic-genai-service'] 
+                    for (s in services) {
+                        dir("${s}") {
+                            sh "docker build -t mytruong28022004/${s}:${commitId} ."
+                            sh "docker push mytruong28022004/${s}:${commitId}"
+                        }
+                    }
                 }
-                checkout scm
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t $IMAGE_REPO:$COMMIT_ID .'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                sh """
-                  echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
-                  docker push $IMAGE_REPO:$COMMIT_ID
-                """
             }
         }
     }
