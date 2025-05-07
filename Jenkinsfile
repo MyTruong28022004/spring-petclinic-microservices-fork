@@ -7,8 +7,7 @@ pipeline {
 
     environment {
         REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
-        IMAGE_NAME = 'mytruong28022004/spring-petclinic-microservices-fork
-' // Tên đầy đủ trên Docker Hub
+        IMAGE_NAME = 'mytruong28022004/spring-petclinic-microservices-fork' // Tên đầy đủ trên Docker Hub
     }
 
     stages {
