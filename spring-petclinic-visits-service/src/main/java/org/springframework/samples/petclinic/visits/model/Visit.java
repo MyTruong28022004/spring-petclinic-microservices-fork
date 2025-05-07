@@ -55,7 +55,7 @@ public class Visit {
     public Date getDate() {
         return this.date;
     }
-
+//LaLa
     public String getDescription() {
         return this.description;
     }
