@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image với commit hash làm tag
-                    sh "docker build -f docker/Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
+                    sh "docker build -f Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
                 }
             }
         }
