@@ -51,7 +51,7 @@ pipeline {
       }
     }
 
-    stage('Build & Push Changed Services') {
+   stage('Build & Push Changed Services') {
       when {
         expression { return env.CHANGED_SERVICES?.trim() }
       }
@@ -59,10 +59,12 @@ pipeline {
         script {
           def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
           def changedServices = env.CHANGED_SERVICES.split(',')
-
-          for (service in changedServices) {
-            echo "Building and pushing image for: ${service}"
-            dir(service) {
+    
+          // Di chuyển về thư mục gốc nơi chứa Dockerfile
+          dir("${env.WORKSPACE}") {
+            for (service in changedServices) {
+              echo "Building and pushing image for: ${service}"
+    
               sh """
                 docker build -f Dockerfile \\
                   --build-arg SERVICE=${service} \\
@@ -70,7 +72,7 @@ pipeline {
                   -t ${IMAGE_NAME}/${service}:latest \\
                   .
               """
-              sh "docker tag ${IMAGE_NAME}/${service}:${commitId} ${IMAGE_NAME}/${service}:latest"
+    
               withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS_ID}") {
                 sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
                 sh "docker push ${IMAGE_NAME}/${service}:latest"
@@ -80,7 +82,6 @@ pipeline {
         }
       }
     }
-  }
 
   post {
     always {
