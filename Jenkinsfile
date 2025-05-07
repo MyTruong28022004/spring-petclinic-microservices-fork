@@ -31,6 +31,7 @@ pipeline {
 
         stage('Docker Login') {
             steps {
+                export DOCKER_BUILDKIT=1
                 sh 'echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin'
             }
         }
@@ -49,10 +50,7 @@ pipeline {
                         dir("${service}") {
                             def image = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
                             echo "Building and pushing image: ${image}"
-                            sh """
-                                docker build -t ${image} .
-                                docker push ${image}
-                            """
+                            sh "docker buildx build --platform linux/amd64 -t ${image} --push ."
                         }
                     }
                 }
