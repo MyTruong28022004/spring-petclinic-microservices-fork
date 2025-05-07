@@ -57,7 +57,7 @@ public class AIDataProvider {
 		List<String> results = topMatches.stream().map(Document::getContent).toList();
 		return new VetResponse(results);
 	}
-//LaLa
+
 	public AddedPetResponse addPetToOwner(AddPetRequest request) {
 		return new AddedPetResponse(webClient
 	            .post()
