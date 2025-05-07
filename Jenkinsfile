@@ -4,25 +4,13 @@ def helmChart = "/var/lib/jenkins/workspace/${JOB_NAME}/app-demo/"
 pipeline {
     agent any
 
-    // parameters {
-    //     string(name: 'BRANCH_NAME', defaultValue: 'dev', description: 'Git branch to build')
-    // }
-
     environment {
         REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
         BRANCH_NAME = "${params.BRANCH_NAME}"
         IMAGE_NAME = 'main'
     }
 
-
     stages {
-        // stage('Print Branch Name') {
-        //     steps {
-        //         script {
-        //             echo "Branch selected: ${BRANCH_NAME}"
-        //         }
-        //     }
-        // }
         stage('Checkout') {
             steps {
                 script {
@@ -45,9 +33,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with the commit hash as a tag
-                    sh "whoami"
-                    sh "docker build -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
+                    // Build the Docker image with the commit hash as a tag, specify Dockerfile path
+                    sh "docker build -f docker/Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
                 }
             }
         }
@@ -64,7 +51,7 @@ pipeline {
         //     steps {
         //         script {
         //             echo "Deploy to k8s"
-        //             sh "helm upgrade --install --namespace=test-${LATEST_COMMIT}  --create-namespace jenkins-${LATEST_COMMIT} -f $helmValues $helmChart --set image.repository=${IMAGE_NAME} --set image.tag=${LATEST_COMMIT}"
+        //             sh "helm upgrade --install --namespace=test-${LATEST_COMMIT} --create-namespace jenkins-${LATEST_COMMIT} -f $helmValues $helmChart --set image.repository=${IMAGE_NAME} --set image.tag=${LATEST_COMMIT}"
         //         }
         //     }
         // }
