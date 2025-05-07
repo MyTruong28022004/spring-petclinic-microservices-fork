@@ -5,16 +5,16 @@ WORKDIR /build
 
 COPY . .
 
-WORKDIR /build/spring-petclinic-api-gateway
-
+ARG SERVICE
+WORKDIR /build/${SERVICE}
 RUN mvn clean package -DskipTests
 
 # Giai đoạn runtime
 FROM eclipse-temurin:17-jdk-jammy
 
+ARG SERVICE
 WORKDIR /app
-
-COPY --from=builder /build/spring-petclinic-api-gateway/target/*.jar app.jar
+COPY --from=builder /build/${SERVICE}/target/*.jar app.jar
 
 EXPOSE 8080
 
