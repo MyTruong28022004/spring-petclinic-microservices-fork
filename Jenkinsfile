@@ -16,7 +16,7 @@ pipeline {
                 checkout([$class: 'GitSCM',
                     branches: [[name: "${params.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/spring-petclinic/spring-petclinic-microservices-fork.git',
+                        url: 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git',
                         credentialsId: "${env.CREDENTIALS_ID}"
                     ]]
                 ])
