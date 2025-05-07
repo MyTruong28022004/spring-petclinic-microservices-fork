@@ -31,7 +31,7 @@ pipeline {
           def services = [
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
-            'spring-petclinic-visit-service',
+            'spring-petclinic-visits-service',
             'spring-petclinic-genai-service'
           ]
 
