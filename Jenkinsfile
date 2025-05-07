@@ -1,7 +1,7 @@
 pipeline {
   agent any
   environment {
-    DOCKER_CREDENTIALS_ID = 'docker-hub-cred'
+    DOCKER_CREDENTIALS_ID = 'docker-hub-cred'  // Đảm bảo đây là ID đúng của credentials trên Jenkins
     REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
     IMAGE_NAME = 'mytruong28022004/spring-petclinic-microservices-fork'
   }
@@ -36,7 +36,7 @@ pipeline {
           ]
 
           // Lọc các service có file thay đổi
-          def changedServices = services.findAll { service ->
+          def changedServices = services.findAll { service -> 
             changedFiles.any { it.startsWith("${service}/") }
           }
 
