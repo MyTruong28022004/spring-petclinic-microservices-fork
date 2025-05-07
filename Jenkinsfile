@@ -75,8 +75,8 @@ pipeline {
             sh """
               docker build -f Dockerfile \\
                 --build-arg SERVICE=${service} \\
-                -t ${IMAGE_NAME}/${service}:${commitId} \\
-                -t ${IMAGE_NAME}/${service}:latest \\
+                -t ${IMAGE_NAME}:${commitId} \\
+                -t ${IMAGE_NAME}:latest \\
                 .
             """
 
@@ -86,8 +86,8 @@ pipeline {
               sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
 
               // Đẩy image lên Docker Hub
-              sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
-              sh "docker push ${IMAGE_NAME}/${service}:latest"
+              sh "docker push ${IMAGE_NAME}:${commitId}"
+              sh "docker push ${IMAGE_NAME}:latest"
             }
           }
         }
