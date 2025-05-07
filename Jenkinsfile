@@ -52,7 +52,12 @@ pipeline {
                         dir("${service}") {
                             def image = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
                             echo "Building and pushing image: ${image}"
-                            sh "docker buildx build --platform linux/amd64 -t ${image} --push ."
+                            sh """
+                                docker buildx build --builder mybuilder \
+                                    --platform linux/amd64 \
+                                    --tag ${image} \
+                                    --push .
+                            """
                         }
                     }
                 }
