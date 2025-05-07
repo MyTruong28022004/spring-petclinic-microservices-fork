@@ -31,8 +31,10 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                export DOCKER_BUILDKIT=1
-                sh 'echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                sh '''
+                    export DOCKER_BUILDKIT=1
+                    echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin
+                '''
             }
         }
 
