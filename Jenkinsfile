@@ -45,7 +45,7 @@ pipeline {
           for (service in changedServices) {
             echo "Building and pushing image for: ${service}"
             dir(service) {
-              sh "docker build -t ${IMAGE_NAME}/${service}:${commitId} ."
+              sh "docker build -f ../Dockerfile --build-arg SERVICE=${service} -t ${IMAGE_NAME}/${service}:${commitId} ."
               sh "docker tag ${IMAGE_NAME}/${service}:${commitId} ${IMAGE_NAME}/${service}:latest"
               withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS_ID}") {
                 sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
