@@ -1,67 +1,81 @@
+def helmValues = "/var/lib/jenkins/workspace/${JOB_NAME}/app-demo/values.yaml"
+def helmChart = "/var/lib/jenkins/workspace/${JOB_NAME}/app-demo/"
+
 pipeline {
     agent any
 
+    // parameters {
+    //     string(name: 'BRANCH_NAME', defaultValue: 'dev', description: 'Git branch to build')
+    // }
+
     environment {
-        DOCKERHUB_USERNAME = 'mytruong28022004'
-        DOCKERHUB_PASSWORD = credentials('docker-hub-cred')
-        CREDENTIALS_ID = 'github-token-1'
+        REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
+        BRANCH_NAME = "${params.BRANCH_NAME}"
+        IMAGE_NAME = 'main'
     }
+
 
     stages {
+        // stage('Print Branch Name') {
+        //     steps {
+        //         script {
+        //             echo "Branch selected: ${BRANCH_NAME}"
+        //         }
+        //     }
+        // }
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: "*/main"]],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git',
-                        credentialsId: "${env.CREDENTIALS_ID}"
-                    ]]
-                ])
-            }
-        }
-
-        stage('Get Commit ID') {
-            steps {
                 script {
-                    COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    echo "Commit ID: ${COMMIT_ID}"
+                    // Checkout the specified branch
+                    git branch: "${BRANCH_NAME}", url: "${REPO_URL}"
                 }
             }
         }
 
-        stage('Docker Login') {
-            steps {
-                sh '''
-                    export DOCKER_BUILDKIT=1
-                    echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                '''
-            }
-        }
-
-        stage('Build & Push Docker Images') {
+        stage('Get Latest Commit') {
             steps {
                 script {
-                    def services = [
-                        'spring-petclinic-customers-service',
-                        'spring-petclinic-vets-service',
-                        'spring-petclinic-visits-service',
-                        'spring-petclinic-genai-service'
-                    ]
-
-                    for (service in services) {
-                        dir("${service}") {
-                            def image = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
-                            echo "Building and pushing image: ${image}"
-                            sh """
-                                docker buildx build --builder mybuilder \
-                                    --platform linux/amd64 \
-                                    --tag ${image} \
-                                    --push .
-                            """
-                        }
-                    }
+                    // Get the latest commit hash
+                    LATEST_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    echo "Latest Commit Hash: ${LATEST_COMMIT}"
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image with the commit hash as a tag
+                    sh "whoami"
+                    sh "docker build -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Push the image to Docker registry (optional)
+                    sh "docker push ${IMAGE_NAME}:${LATEST_COMMIT}"
+                }
+            }
+        }
+        // stage('Apply k8s') {
+        //     steps {
+        //         script {
+        //             echo "Deploy to k8s"
+        //             sh "helm upgrade --install --namespace=test-${LATEST_COMMIT}  --create-namespace jenkins-${LATEST_COMMIT} -f $helmValues $helmChart --set image.repository=${IMAGE_NAME} --set image.tag=${LATEST_COMMIT}"
+        //         }
+        //     }
+        // }
     }
+
+    // post {
+    //     always {
+    //         // Clean up Docker images and containers
+    //         cleanWs()
+    //         sh 'docker system prune -af'
+    //         sh 'docker logout'
+    //     }
+    // }
 }
