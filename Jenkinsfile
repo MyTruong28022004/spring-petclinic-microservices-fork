@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USERNAME = 'mytruong28022004'
+        DOCKERHUB_USERNAME = 'mytruong28'
         DOCKERHUB_PASSWORD = credentials('docker-hub-cred') // DockerHub credentials trong Jenkins
         CREDENTIALS_ID = 'github-token-1'
     }
