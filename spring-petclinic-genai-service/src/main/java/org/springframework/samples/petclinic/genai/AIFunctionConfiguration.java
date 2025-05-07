@@ -44,7 +44,7 @@ class AIFunctionConfiguration {
 	public Function<OwnerRequest, OwnerResponse> addOwnerToPetclinic(AIDataProvider petclinicAiDataProvider) {
 		return petclinicAiDataProvider::addOwnerToPetclinic;
 	}
-
+//LaLa
 	@Bean
 	@Description("List the veterinarians that the pet clinic has")
 	public Function<VetRequest, VetResponse> listVets(AIDataProvider petclinicAiProvider) {
