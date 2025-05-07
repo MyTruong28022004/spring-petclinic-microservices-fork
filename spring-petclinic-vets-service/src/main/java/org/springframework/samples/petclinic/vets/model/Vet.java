@@ -60,7 +60,7 @@ public class Vet {
         }
         return this.specialties;
     }
-//LaLa
+    
     @XmlElement
     public List<Specialty> getSpecialties() {
         List<Specialty> sortedSpecs = new ArrayList<>(getSpecialtiesInternal());
