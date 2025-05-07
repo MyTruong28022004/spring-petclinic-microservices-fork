@@ -57,6 +57,7 @@ public class Owner {
     @Column(name = "city")
     @NotBlank
     private String city;
+    //LaLa
 
     @Column(name = "telephone")
     @NotBlank
