@@ -22,7 +22,7 @@ public class AIBeanConfiguration {
 	public ChatMemory chatMemory() {
 		return new InMemoryChatMemory();
 	}
-//LaLa
+
 	@Bean
 	VectorStore vectorStore(EmbeddingModel embeddingModel) {
 		return new SimpleVectorStore(embeddingModel);
