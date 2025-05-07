@@ -2,21 +2,20 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Nhánh Git để xây dựng') // Thêm parameter cho nhánh Git
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Nhánh Git để xây dựng')
     }
 
     environment {
         REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
-        BRANCH_NAME = "${params.BRANCH_NAME}" // Sử dụng parameter BRANCH_NAME
-        IMAGE_NAME = 'main'
+        IMAGE_NAME = 'mytruong28022004/spring-petclinic-microservices-fork
+' // Tên đầy đủ trên Docker Hub
     }
 
     stages {
         stage('Checkout') {
             steps {
                 script {
-                    // Checkout nhánh được chỉ định
-                    git branch: "${BRANCH_NAME}", url: "${REPO_URL}"
+                    git branch: "${params.BRANCH_NAME}", url: "${REPO_URL}"
                 }
             }
         }
@@ -24,9 +23,10 @@ pipeline {
         stage('Get Latest Commit') {
             steps {
                 script {
-                    // Lấy hash commit mới nhất
-                    LATEST_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    echo "Latest Commit Hash: ${LATEST_COMMIT}"
+                    // Lấy hash commit mới nhất (ngắn)
+                    COMMIT_ID = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    echo "Commit ID: ${COMMIT_ID}"
+                    env.COMMIT_ID = COMMIT_ID
                 }
             }
         }
@@ -34,8 +34,19 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image với commit hash làm tag
-                    sh "docker build -f Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
+                    // Build image với tag là commit id
+                    sh "docker build -f Dockerfile -t ${IMAGE_NAME}:${COMMIT_ID} ."
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                script {
+                    // Login vào Docker Hub - cần cấu hình trước trong Jenkins Credentials (ID: docker-hub-cred)
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    }
                 }
             }
         }
@@ -43,8 +54,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push Docker image lên registry (tùy chọn)
-                    sh "docker push ${IMAGE_NAME}:${LATEST_COMMIT}"
+                    // Push image đã tag lên Docker Hub
+                    sh "docker push ${IMAGE_NAME}:${COMMIT_ID}"
                 }
             }
         }
