@@ -47,6 +47,7 @@ public class Visit {
 
     @Column(name = "pet_id")
     private int petId;
+    //LaLa
 
     public Integer getId() {
         return this.id;
