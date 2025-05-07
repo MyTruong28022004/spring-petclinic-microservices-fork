@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB_USERNAME = 'mytruong28022004'
-        DOCKERHUB_PASSWORD = credentials('docker-hub-cred') // DockerHub credentials trong Jenkins
+        DOCKERHUB_PASSWORD = credentials('docker-hub-cred')
         CREDENTIALS_ID = 'github-token-1'
     }
 
@@ -29,13 +29,13 @@ pipeline {
             }
         }
 
-        stage('Login DockerHub') {
+        stage('Docker Login') {
             steps {
-                sh 'echo "28102004Tm@" | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
             }
         }
 
-        stage('Build & Push Images with Buildx') {
+        stage('Build & Push Docker Images') {
             steps {
                 script {
                     def services = [
@@ -45,13 +45,14 @@ pipeline {
                         'spring-petclinic-genai-service'
                     ]
 
-                    sh 'docker buildx create --use || true'  // Tạo buildx nếu chưa có
-
                     for (service in services) {
                         dir("${service}") {
                             def image = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
-                            echo "Building and pushing: ${image}"
-                            sh "docker buildx build --platform linux/amd64 -t ${image} --push ."
+                            echo "Building and pushing image: ${image}"
+                            sh """
+                                docker build -t ${image} .
+                                docker push ${image}
+                            """
                         }
                     }
                 }
