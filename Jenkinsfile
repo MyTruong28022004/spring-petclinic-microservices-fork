@@ -2,59 +2,66 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_NAMESPACE = "mytruong28022004"
-        DOCKER_COMPOSE_FILE = "docker-compose.yaml"
+        DOCKERHUB_USERNAME = 'mytruong28022004'
+        CREDENTIALS_ID = 'github-token-1'
     }
 
     stages {
         stage('Checkout') {
             steps {
+                checkout([$class: 'GitSCM',
+                    branches: [[name: "main"]],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git',
+                        credentialsId: "${env.CREDENTIALS_ID}"
+                    ]]
+                ])
+            }
+        }
+
+        stage('Get Commit ID') {
+            steps {
                 script {
-                    def branchName = sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD").trim()
-                    echo "Checking out branch: ${branchName}"
-                    checkout scm
+                    COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    echo "Commit ID: ${COMMIT_ID}"
                 }
             }
         }
 
-        stage('Build & Push Docker Images') {
+        stage('Build Docker Images') {
             steps {
                 script {
-                    def commitId = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
-                    def branchName = sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD").trim()
-                    def tag = (branchName == "main") ? "latest" : commitId
-
                     def services = [
                         'spring-petclinic-customers-service',
                         'spring-petclinic-vets-service',
                         'spring-petclinic-visits-service',
                         'spring-petclinic-genai-service'
                     ]
-
-                    for (s in services) {
-                        echo "Skipping build for ${s} because no Dockerfile is present"
-                        // Nếu sau này có Dockerfile thì bạn có thể bật lại đoạn dưới:
-                        // dir("${s}") {
-                        //     echo "Building ${s} with tag ${tag}"
-                        //     sh "docker build -t ${DOCKERHUB_NAMESPACE}/${s}:${tag} ."
-                        //     sh "docker push ${DOCKERHUB_NAMESPACE}/${s}:${tag}"
-                        // }
+                    for (service in services) {
+                        dir("${service}") {
+                            def imageName = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
+                            echo "Building image ${imageName}"
+                            sh "docker build -t ${imageName} ."
+                        }
                     }
                 }
             }
         }
 
-        stage('Deploy Using Docker Compose') {
+        stage('Push Docker Images') {
             steps {
                 script {
-                    echo "Pulling latest images from Docker Hub..."
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} pull"
-
-                    echo "Stopping old containers (if any)..."
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} down"
-
-                    echo "Starting new containers..."
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d"
+                    def services = [
+                        'spring-petclinic-customers-service',
+                        'spring-petclinic-vets-service',
+                        'spring-petclinic-visits-service',
+                        'spring-petclinic-genai-service'
+                    ]
+                    for (service in services) {
+                        def imageName = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
+                        echo "Pushing image ${imageName}"
+                        sh "docker push ${imageName}"
+                    }
                 }
             }
         }
