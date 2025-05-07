@@ -1,12 +1,13 @@
-def helmValues = "/var/lib/jenkins/workspace/${JOB_NAME}/app-demo/values.yaml"
-def helmChart = "/var/lib/jenkins/workspace/${JOB_NAME}/app-demo/"
-
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Nhánh Git để xây dựng') // Thêm parameter cho nhánh Git
+    }
+
     environment {
         REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
-        BRANCH_NAME = "${params.BRANCH_NAME}"
+        BRANCH_NAME = "${params.BRANCH_NAME}" // Sử dụng parameter BRANCH_NAME
         IMAGE_NAME = 'main'
     }
 
@@ -14,7 +15,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Checkout the specified branch
+                    // Checkout nhánh được chỉ định
                     git branch: "${BRANCH_NAME}", url: "${REPO_URL}"
                 }
             }
@@ -23,7 +24,7 @@ pipeline {
         stage('Get Latest Commit') {
             steps {
                 script {
-                    // Get the latest commit hash
+                    // Lấy hash commit mới nhất
                     LATEST_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     echo "Latest Commit Hash: ${LATEST_COMMIT}"
                 }
@@ -33,7 +34,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with the commit hash as a tag, specify Dockerfile path
+                    // Build Docker image với commit hash làm tag
                     sh "docker build -f docker/Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
                 }
             }
@@ -42,27 +43,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push the image to Docker registry (optional)
+                    // Push Docker image lên registry (tùy chọn)
                     sh "docker push ${IMAGE_NAME}:${LATEST_COMMIT}"
                 }
             }
         }
-        // stage('Apply k8s') {
-        //     steps {
-        //         script {
-        //             echo "Deploy to k8s"
-        //             sh "helm upgrade --install --namespace=test-${LATEST_COMMIT} --create-namespace jenkins-${LATEST_COMMIT} -f $helmValues $helmChart --set image.repository=${IMAGE_NAME} --set image.tag=${LATEST_COMMIT}"
-        //         }
-        //     }
-        // }
     }
-
-    // post {
-    //     always {
-    //         // Clean up Docker images and containers
-    //         cleanWs()
-    //         sh 'docker system prune -af'
-    //         sh 'docker logout'
-    //     }
-    // }
 }
