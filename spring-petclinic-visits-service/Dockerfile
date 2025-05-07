@@ -1,15 +1,21 @@
-# Sử dụng image Java 17 slim
-FROM openjdk:17-jdk-slim
+# Giai đoạn build
+FROM maven:3.8.6-eclipse-temurin-17 AS builder
 
-# Tạo một thư mục ứng dụng
+WORKDIR /build
+
+COPY . .
+
+WORKDIR /build/spring-petclinic-api-gateway
+
+RUN mvn clean package -DskipTests
+
+# Giai đoạn runtime
+FROM eclipse-temurin:17-jdk-jammy
+
 WORKDIR /app
 
-# Sao chép file .jar vào container
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+COPY --from=builder /build/spring-petclinic-visits-service/target/*.jar app.jar
 
-# Mở cổng ứng dụng (theo cấu hình mặc định trong Spring Boot)
-EXPOSE 8082
+EXPOSE 8080
 
-# Chạy ứng dụng khi container bắt đầu
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+CMD ["java", "-jar", "app.jar"]
