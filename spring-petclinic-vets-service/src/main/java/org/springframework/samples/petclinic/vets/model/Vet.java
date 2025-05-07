@@ -72,6 +72,8 @@ public class Vet {
         return getSpecialtiesInternal().size();
     }
 
+    //LaLa
+
     public void addSpecialty(Specialty specialty) {
         getSpecialtiesInternal().add(specialty);
     }
