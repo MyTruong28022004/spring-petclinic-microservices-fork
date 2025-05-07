@@ -48,7 +48,7 @@ pipeline {
       }
     }
 
-    stage('Build & Push Changed Services') {
+    stage('Build & Push Changed Images') {
       when {
         expression { return env.CHANGED_SERVICES?.trim() }
       }
