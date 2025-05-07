@@ -1,9 +1,8 @@
 pipeline {
   agent any
   environment {
-    DOCKER_CREDENTIALS_ID = 'docker-hub-cred'  // Đảm bảo đây là ID đúng của credentials trên Jenkins
+    DOCKER_CREDENTIALS_ID = 'docker-hub-cred'
     REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
-    IMAGE_NAME = 'mytruong28022004/spring-petclinic-microservices-fork'
   }
   parameters {
     string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
@@ -18,16 +17,9 @@ pipeline {
     stage('Detect Changed Services') {
       steps {
         script {
-          // Lấy commit trước đó nếu không có HEAD^
           def prevCommit = sh(script: 'git rev-parse HEAD^ || git rev-parse HEAD', returnStdout: true).trim()
-          
-          // Lấy danh sách file thay đổi giữa commit hiện tại và commit trước đó
-          def changedFiles = sh(
-            script: "git diff --name-only ${prevCommit} HEAD",
-            returnStdout: true
-          ).trim().split("\n")
-          
-          // Danh sách các service có trong repo
+          def changedFiles = sh(script: "git diff --name-only ${prevCommit} HEAD", returnStdout: true).trim().split("\n")
+
           def services = [
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
@@ -35,12 +27,10 @@ pipeline {
             'spring-petclinic-genai-service'
           ]
 
-          // Lọc các service có file thay đổi
-          def changedServices = services.findAll { service -> 
+          def changedServices = services.findAll { service ->
             changedFiles.any { it.startsWith("${service}/") }
           }
 
-          // In ra các service đã thay đổi
           echo "Changed services: ${changedServices}"
           env.CHANGED_SERVICES = changedServices.join(',')
         }
@@ -67,33 +57,37 @@ pipeline {
           def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
           def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
 
-          // Build và Push cho từng service đã thay đổi
-          changedServices.each { service ->
-            echo "Building and pushing image for: ${service}"
+          // Ánh xạ service -> image name
+          def imageMap = [
+            'spring-petclinic-customers-service': 'mytruong28022004/spring-petclinic-customers-service',
+            'spring-petclinic-vets-service'    : 'mytruong28022004/spring-petclinic-vets-service',
+            'spring-petclinic-visit-service'   : 'mytruong28022004/spring-petclinic-visit-service',
+            'spring-petclinic-genai-service'   : 'mytruong28022004/spring-petclinic-genai-service'
+          ]
 
-            // Xây dựng Docker image cho service
+          changedServices.each { service ->
+            def imageName = imageMap[service]
+            echo "Building and pushing image for: ${service} as ${imageName}"
+
+            // Build image
             sh """
               docker build -f Dockerfile \\
                 --build-arg SERVICE=${service} \\
-                -t ${IMAGE_NAME}:${commitId} \\
-                -t ${IMAGE_NAME}:latest \\
+                -t ${imageName}:${commitId} \\
+                -t ${imageName}:latest \\
                 .
             """
 
-            // Đăng nhập Docker Hub và đẩy image lên Docker Hub
-            withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-              // Đăng nhập Docker Hub
+            // Push image
+            withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
               sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
-
-              // Đẩy image lên Docker Hub
-              sh "docker push ${IMAGE_NAME}:${commitId}"
-              sh "docker push ${IMAGE_NAME}:latest"
+              sh "docker push ${imageName}:${commitId}"
+              sh "docker push ${imageName}:latest"
             }
           }
         }
       }
     }
-
   }
   post {
     always {
