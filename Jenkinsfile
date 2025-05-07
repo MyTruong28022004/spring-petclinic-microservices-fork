@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image với commit hash làm tag
-                    sh "docker build -f docker/Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
+                    sh "sudo docker build -f docker/Dockerfile -t ${IMAGE_NAME}:${LATEST_COMMIT} ."
                 }
             }
         }
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     // Push Docker image lên registry (tùy chọn)
-                    sh "docker push ${IMAGE_NAME}:${LATEST_COMMIT}"
+                    sh "sudo docker push ${IMAGE_NAME}:${LATEST_COMMIT}"
                 }
             }
         }
