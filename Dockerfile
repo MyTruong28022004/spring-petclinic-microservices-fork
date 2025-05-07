@@ -7,11 +7,8 @@ WORKDIR /build
 # Copy toàn bộ source code để đảm bảo parent POM tồn tại
 COPY . .
 
-# Di chuyển vào thư mục chứa service cụ thể
-WORKDIR /build/${SERVICE}
-
 # Build service (bỏ qua test để nhanh hơn)
-RUN mvn clean package -DskipTests
+RUN cd ${SERVICE} && mvn clean package -DskipTests
 
 # Giai đoạn runtime
 FROM eclipse-temurin:17-jdk-jammy
