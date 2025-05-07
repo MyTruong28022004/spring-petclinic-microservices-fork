@@ -31,7 +31,7 @@ pipeline {
           def services = [
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
-            'spring-petclinic-visits-service',
+            'spring-petclinic-visit-service',
             'spring-petclinic-genai-service'
           ]
 
@@ -80,8 +80,12 @@ pipeline {
                 .
             """
 
-            // Đẩy image lên Docker Hub
-            withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS_ID}") {
+            // Đăng nhập Docker Hub và đẩy image lên Docker Hub
+            withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+              // Đăng nhập Docker Hub
+              sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
+
+              // Đẩy image lên Docker Hub
               sh "docker push ${IMAGE_NAME}/${service}:${commitId}"
               sh "docker push ${IMAGE_NAME}/${service}:latest"
             }
