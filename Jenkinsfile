@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB_USERNAME = 'mytruong28022004'
+        DOCKERHUB_PASSWORD = credentials('docker-hub-cred') // DockerHub credentials trong Jenkins
         CREDENTIALS_ID = 'github-token-1'
     }
 
@@ -10,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout([$class: 'GitSCM',
-                    branches: [[name: "*/**"]],
+                    branches: [[name: "*/main"]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git',
                         credentialsId: "${env.CREDENTIALS_ID}"
@@ -19,43 +20,22 @@ pipeline {
             }
         }
 
-        stage('Get Commit ID & Branch') {
+        stage('Get Commit ID') {
             steps {
                 script {
                     COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    BRANCH_NAME = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                    echo "Branch: ${BRANCH_NAME}"
                     echo "Commit ID: ${COMMIT_ID}"
                 }
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Login DockerHub') {
             steps {
-                script {
-                    def services = [
-                        'spring-petclinic-customers-service',
-                        'spring-petclinic-vets-service',
-                        'spring-petclinic-visits-service',
-                        'spring-petclinic-genai-service'
-                    ]
-                    for (service in services) {
-                        dir("${service}") {
-                            def commitTag = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
-                            echo "Building image: ${commitTag}"
-                            sh "docker build -t ${commitTag} ."
-
-                            if (BRANCH_NAME == "main") {
-                                def latestTag = "${DOCKERHUB_USERNAME}/${service}:latest"
-                                sh "docker tag ${commitTag} ${latestTag}"
-                            }
-                        }
-                    }
-                }
+                sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Build & Push Images with Buildx') {
             steps {
                 script {
                     def services = [
@@ -64,15 +44,14 @@ pipeline {
                         'spring-petclinic-visits-service',
                         'spring-petclinic-genai-service'
                     ]
-                    for (service in services) {
-                        def commitTag = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
-                        echo "Pushing image: ${commitTag}"
-                        sh "docker push ${commitTag}"
 
-                        if (BRANCH_NAME == "main") {
-                            def latestTag = "${DOCKERHUB_USERNAME}/${service}:latest"
-                            echo "Pushing image: ${latestTag}"
-                            sh "docker push ${latestTag}"
+                    sh 'docker buildx create --use || true'  // Tạo buildx nếu chưa có
+
+                    for (service in services) {
+                        dir("${service}") {
+                            def image = "${DOCKERHUB_USERNAME}/${service}:${COMMIT_ID}"
+                            echo "Building and pushing: ${image}"
+                            sh "docker buildx build --platform linux/amd64 -t ${image} --push ."
                         }
                     }
                 }
