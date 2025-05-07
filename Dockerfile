@@ -5,7 +5,7 @@ WORKDIR /build
 
 COPY . .
 
-WORKDIR /build/spring-petclinic-api-gateway
+WORKDIR /build/${SERVICE}
 
 RUN mvn clean package -DskipTests
 
@@ -14,7 +14,7 @@ FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
-COPY --from=builder /build/spring-petclinic-api-gateway/target/*.jar app.jar
+COPY --from=builder /build/${SERVICE}/target/*.jar app.jar
 
 EXPOSE 8080
 
