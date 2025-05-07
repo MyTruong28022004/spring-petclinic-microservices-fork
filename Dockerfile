@@ -6,6 +6,9 @@ WORKDIR /build
 # Copy toàn bộ source code (gồm nhiều module)
 COPY . .
 
+# Định nghĩa biến build argument cho SERVICE
+ARG SERVICE
+
 # Chuyển vào thư mục của service chính (ví dụ: api-gateway)
 WORKDIR /build/${SERVICE}
 
