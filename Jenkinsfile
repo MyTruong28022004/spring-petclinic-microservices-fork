@@ -35,12 +35,19 @@ pipeline {
                         'spring-petclinic-genai-service'
                     ]
 
-                    // Build và push cho mỗi service
+                    // Chỉ build các dịch vụ có sự thay đổi
                     for (s in services) {
                         dir("${s}") {
-                            echo "Building ${s} with tag ${tag}"
-                            sh "docker build -t ${DOCKERHUB_NAMESPACE}/${s}:${tag} ."
-                            sh "docker push ${DOCKERHUB_NAMESPACE}/${s}:${tag}"
+                            echo "Checking changes in ${s}"
+                            def changes = sh(returnStdout: true, script: "git diff --name-only HEAD~1 HEAD").trim()
+
+                            if (changes.contains("${s}/")) {
+                                echo "Building ${s} with tag ${tag}"
+                                sh "docker build -t ${DOCKERHUB_NAMESPACE}/${s}:${tag} ."
+                                sh "docker push ${DOCKERHUB_NAMESPACE}/${s}:${tag}"
+                            } else {
+                                echo "No changes in ${s}, skipping build."
+                            }
                         }
                     }
                 }
