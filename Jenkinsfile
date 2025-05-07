@@ -33,7 +33,7 @@ pipeline {
             steps {
                 sh '''
 echo "Username: $DOCKERHUB_USERNAME"
-echo "Password (length): ${#DOCKERHUB_PASSWORD}"
+echo "Password: $DOCKERHUB_PASSWORD"
 '''
 
                 sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
