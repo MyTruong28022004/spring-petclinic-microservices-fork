@@ -1,32 +1,27 @@
-# Use an official Maven image to build the app
-FROM maven:3.8.6-openjdk-11 as build
+# Stage 1: Build Maven project
+FROM maven:3.8.6-openjdk-17 AS builder
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /build
 
-# Copy the pom.xml and install dependencies
-COPY pom.xml .
+# Copy toàn bộ source code (gồm nhiều module)
+COPY . .
 
-# Download all dependencies (for faster builds)
-RUN mvn dependency:go-offline
+# Chuyển vào thư mục của service chính (ví dụ: api-gateway)
+WORKDIR /build/spring-petclinic-api-gateway
 
-# Copy the rest of the application code
-COPY src /app/src
-
-# Build the application
+# Build service chính
 RUN mvn clean package -DskipTests
 
-# Use an official OpenJDK runtime as the base image for running the app
-FROM openjdk:11-jre-slim
+# Stage 2: Tạo image chạy nhẹ
+FROM openjdk:17-jdk-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the jar file from the build stage
-COPY --from=build /app/target/*.jar /app/petclinic.jar
+# Copy file JAR đã build từ stage 1
+COPY --from=builder /build/spring-petclinic-api-gateway/target/*.jar app.jar
 
-# Expose the port that the app will run on
+# Mở port service chính (nếu là gateway thường là 8080 hoặc 8081)
 EXPOSE 8080
 
-# Command to run the Spring Boot application
-CMD ["java", "-jar", "petclinic.jar"]
+# Chạy ứng dụng
+CMD ["java", "-jar", "app.jar"]
