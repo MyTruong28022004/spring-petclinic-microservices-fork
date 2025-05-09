@@ -175,8 +175,8 @@
                                         <executable>${container.executable}</executable>
                                         <workingDirectory>${docker.image.dockerfile.dir}</workingDirectory>
                                         <arguments>
-                                            <argument>build</argument>
                                             <argument>buildx</argument>
+                                            <argument>build</argument>
                                             <argument>-f</argument>
                                             <argument>Dockerfile</argument>
                                             <argument>--build-arg</argument>
