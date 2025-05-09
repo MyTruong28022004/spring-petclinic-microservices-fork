@@ -75,7 +75,7 @@ public class Vet {
     public void addSpecialty(Specialty specialty) {
         getSpecialtiesInternal().add(specialty);
     }
-
+    //LaLa
     public Integer getId() {
         return this.id;
     }
