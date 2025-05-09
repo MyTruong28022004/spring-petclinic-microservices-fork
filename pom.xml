@@ -177,13 +177,13 @@
                                         <arguments>
                                             <argument>-c</argument>
                                             <argument>
-                                                docker buildx build \
-                                                -f Dockerfile \
-                                                --build-arg ARTIFACT_NAME=${project.build.finalName} \
-                                                --build-arg EXPOSED_PORT=${docker.image.exposed.port} \
-                                                --platform ${container.platform} \
-                                                ${container.build.extraarg} \
-                                                -t ${docker.image.prefix}/${project.artifactId} \
+                                                docker buildx build 
+                                                -f Dockerfile 
+                                                --build-arg ARTIFACT_NAME=${project.build.finalName} 
+                                                --build-arg EXPOSED_PORT=${docker.image.exposed.port} 
+                                                --platform ${container.platform} 
+                                                ${container.build.extraarg} 
+                                                -t ${docker.image.prefix}/${project.artifactId} 
                                                 ${project.build.directory}
                                             </argument>
                                         </arguments>
