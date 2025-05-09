@@ -69,20 +69,16 @@ pipeline {
             def imageName = imageMap[service]
             echo "Building and pushing image for: ${service} as ${imageName}"
 
-            // Build image
-            sh """
-              docker build -f Dockerfile \\
-                --build-arg SERVICE=${service} \\
-                -t ${imageName}:${commitId} \\
-                -t ${imageName}:latest \\
-                .
-            """
+            dir(service) {
+              // Build image using Maven wrapper and Docker profile
+              sh "../mvnw clean install -PbuildDocker"
 
-            // Push image
-            withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-              sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
-              sh "docker push ${imageName}:${commitId}"
-              sh "docker push ${imageName}:latest"
+              withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
+                sh "docker tag ${imageName} ${imageName}:${commitId}"
+                sh "docker push ${imageName}:${commitId}"
+                sh "docker push ${imageName}:latest"
+              }
             }
           }
         }
