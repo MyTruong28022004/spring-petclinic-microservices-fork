@@ -59,7 +59,7 @@ public class Visit {
     public String getDescription() {
         return this.description;
     }
-//LaLa
+
     public int getPetId() {
         return this.petId;
     }
