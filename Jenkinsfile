@@ -3,7 +3,6 @@ pipeline {
   environment {
     DOCKER_CREDENTIALS_ID = 'docker-hub-cred'
     REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
-    DOCKER_BUILDKIT = '0'
   }
   parameters {
     string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
