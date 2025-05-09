@@ -75,7 +75,7 @@ public class Visit {
     public void setDescription(String description) {
         this.description = description;
     }
-//LaLa
+
     public void setPetId(int petId) {
         this.petId = petId;
     }
