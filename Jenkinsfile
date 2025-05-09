@@ -71,7 +71,7 @@ pipeline {
 
             dir(service) {
               // Build image using Maven wrapper and Docker profile
-              sh "../mvnw clean install -P buildDocker"
+              sh "./mvnw clean install -P buildDocker -Dcontainer.platform="linux/arm64""
 
               withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                 sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
