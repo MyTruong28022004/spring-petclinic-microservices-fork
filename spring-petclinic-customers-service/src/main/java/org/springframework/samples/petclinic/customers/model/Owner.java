@@ -78,7 +78,7 @@ public class Owner {
         PropertyComparator.sort(sortedPets, new MutableSortDefinition("name", true, true));
         return Collections.unmodifiableList(sortedPets);
     }
-    //LaLa
+    //LaLi
     public void addPet(Pet pet) {
         getPetsInternal().add(pet);
         pet.setOwner(this);
