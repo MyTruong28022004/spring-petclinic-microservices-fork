@@ -65,7 +65,7 @@ public class AIDataProvider {
 	            .bodyValue(request.pet())
 	            .retrieve().bodyToMono(PetDetails.class).block());
 	}
-//LaLa
+
 	public OwnerResponse addOwnerToPetclinic(OwnerRequest ownerRequest) {
 		return new OwnerResponse(webClient
 	            .post()
