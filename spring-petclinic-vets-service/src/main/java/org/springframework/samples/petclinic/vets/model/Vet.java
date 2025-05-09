@@ -87,7 +87,7 @@ public class Vet {
     public String getLastName() {
         return this.lastName;
     }
-//LaLa
+
     public void setId(Integer id) {
         this.id = id;
     }
