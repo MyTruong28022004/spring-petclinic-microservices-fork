@@ -71,7 +71,7 @@ public class Visit {
     public void setDate(Date date) {
         this.date = date;
     }
-
+    //LaLa
     public void setDescription(String description) {
         this.description = description;
     }
