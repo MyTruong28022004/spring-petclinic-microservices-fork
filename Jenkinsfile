@@ -23,7 +23,7 @@ pipeline {
           def services = [
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
-            'spring-petclinic-visit-service',
+            'spring-petclinic-visits-service',
             'spring-petclinic-genai-service'
           ]
 
@@ -61,7 +61,7 @@ pipeline {
           def imageMap = [
             'spring-petclinic-customers-service': 'mytruong28022004/spring-petclinic-customers-service',
             'spring-petclinic-vets-service'    : 'mytruong28022004/spring-petclinic-vets-service',
-            'spring-petclinic-visit-service'   : 'mytruong28022004/spring-petclinic-visit-service',
+            'spring-petclinic-visits-service'   : 'mytruong28022004/spring-petclinic-visits-service',
             'spring-petclinic-genai-service'   : 'mytruong28022004/spring-petclinic-genai-service'
           ]
 
