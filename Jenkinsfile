@@ -72,7 +72,7 @@ pipeline {
 
               dir(service) {
                 sh """
-                  ../mvnw clean install -Dmaven.test.skip=true \\
+                  ../mvn clean install -Dmaven.test.skip=true \\
                     -P buildDocker \\
                     -Ddocker.image.prefix=${REPOSITORY_PREFIX} \\
                     -Dcontainer.build.extraarg="--push" \\
