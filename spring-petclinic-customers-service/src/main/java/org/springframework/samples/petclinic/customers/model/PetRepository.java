@@ -40,7 +40,7 @@ public interface PetRepository extends JpaRepository<Pet, Integer> {
      */
     @Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
     List<PetType> findPetTypes();
-
+    //LaLa
     @Query("FROM PetType ptype WHERE ptype.id = :typeId")
     Optional<PetType> findPetTypeById(@Param("typeId") int typeId);
 
