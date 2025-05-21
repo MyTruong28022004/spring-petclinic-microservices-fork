@@ -41,7 +41,12 @@ spring:
           filters:
             - StripPrefix=2
             - CircuitBreaker=name=genaiCircuitBreaker,fallbackUri=/fallback
-
+---
+spring:
+  config:
+    activate:
+      on-profile: kubernetes
+    import: configserver:http://petclinic-config:8888
 ---
 spring:
   config:
