@@ -4,7 +4,12 @@ spring:
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 
-
+---
+spring:
+  config:
+    activate:
+      on-profile: kubernetes
+    import: configserver:http://petclinic-config:8888
 ---
 spring:
   config:

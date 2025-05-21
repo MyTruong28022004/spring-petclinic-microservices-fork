@@ -7,7 +7,13 @@ spring:
     cache-names: vets
   profiles:
     active: production
-
+    
+---
+spring:
+  config:
+    activate:
+      on-profile: kubernetes
+    import: configserver:http://petclinic-config:8888
 ---
 spring:
   config:
