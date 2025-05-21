@@ -24,7 +24,11 @@ pipeline {
             'spring-petclinic-customers-service',
             'spring-petclinic-vets-service',
             'spring-petclinic-visits-service',
-            'spring-petclinic-genai-service'
+            'spring-petclinic-genai-service',
+            'spring-petclinic-admin-server',
+            'spring-petclinic-api-gateway',
+            'spring-petclinic-config-server',
+            'spring-petclinic-discovery-server'
           ]
 
           def changedServices = services.findAll { service ->
@@ -62,7 +66,11 @@ pipeline {
             'spring-petclinic-customers-service': 'mytruong28022004/spring-petclinic-customers-service',
             'spring-petclinic-vets-service'    : 'mytruong28022004/spring-petclinic-vets-service',
             'spring-petclinic-visits-service'   : 'mytruong28022004/spring-petclinic-visits-service',
-            'spring-petclinic-genai-service'   : 'mytruong28022004/spring-petclinic-genai-service'
+            'spring-petclinic-genai-service'   : 'mytruong28022004/spring-petclinic-genai-service',
+            'spring-petclinic-admin-server':  'mytruong28022004/spring-petclinic-admin-server',
+            'spring-petclinic-api-gateway':  'mytruong28022004/spring-petclinic-api-gateway',
+            'spring-petclinic-config-server':  'mytruong28022004/spring-petclinic-config-server',
+            'spring-petclinic-discovery-server':  'mytruong28022004/spring-petclinic-discovery-server'
           ]
 
           changedServices.each { service ->
