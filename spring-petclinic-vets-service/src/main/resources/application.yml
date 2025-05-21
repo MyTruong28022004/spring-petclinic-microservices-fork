@@ -14,9 +14,3 @@ spring:
     activate:
       on-profile: kubernetes
     import: configserver:http://petclinic-config:8888
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
