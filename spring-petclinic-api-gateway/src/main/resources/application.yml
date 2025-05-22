@@ -41,3 +41,9 @@ spring:
           filters:
             - StripPrefix=2
             - CircuitBreaker=name=genaiCircuitBreaker,fallbackUri=/fallback
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://disovery-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true

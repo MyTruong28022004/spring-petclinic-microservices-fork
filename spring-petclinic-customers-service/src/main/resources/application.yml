@@ -3,11 +3,9 @@ spring:
     name: customers-service
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
-
-
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://petclinic-discovery:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
