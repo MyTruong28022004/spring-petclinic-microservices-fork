@@ -58,7 +58,7 @@ pipeline {
       }
       steps {
         script {
-          def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+          def commitId = sh(script: 'git rev-parse HEAD', returnStdout: true).trim().take(7)
           def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
 
           // Ánh xạ service -> image name
