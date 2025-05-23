@@ -113,7 +113,7 @@ pipeline {
       }
       steps {
         dir('cd-temp') {
-          git url: "${HELM_REPO_URL}", credentialsId: "${GIT_CREDENTIALS_ID}", branch: "main"
+          git url: "${HELM_REPO_URL}", credentialsId: "${GIT_CREDENTIALS_ID}", branch: "master"
 
           script {
             def valuesFile = env.HAS_TAG == 'true' ? 'spring-pet-clinic/values_staging.yaml' : 'spring-pet-clinic/values_dev.yaml'
