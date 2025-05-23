@@ -122,12 +122,7 @@ pipeline {
             changedServices.each { service ->
               def imageName = "mytruong28022004/${service}"
               sh """
-              if ! command -v yq &> /dev/null; then
-                  echo "Installing yq..."
-                  wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-                  chmod +x /usr/local/bin/yq
-              fi
-              yq e '(.${service}.image.tag) = "${env.IMAGE_TAG}"' -i ${valuesFile}
+                docker run --rm -v "$PWD":/workdir mikefarah/yq e "(.${service}.image.tag) = \"${IMAGE_TAG}\"" -i "/workdir/${valuesFile}"
               """
             }
 
