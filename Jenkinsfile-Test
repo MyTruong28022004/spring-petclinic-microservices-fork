@@ -5,7 +5,7 @@ pipeline {
     REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
     HELM_REPO_URL = 'https://github.com/thmthu/CD-for-pet-clinic.git'
     HELM_REPO_DIR = 'CD-for-pet-clinic'
-    GIT_CREDENTIALS_ID = 'fc10ca8f-202e-4463-aa8c-ba8047f21c64'
+    GIT_CREDENTIALS_ID = 'thmthu-git'
   }
 
   parameters {
@@ -119,20 +119,24 @@ pipeline {
             def valuesFile = env.HAS_TAG == 'true' ? 'spring-pet-clinic/values_staging.yaml' : 'spring-pet-clinic/values_dev.yaml'
             def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
 
-            sh "ls -la /workdir/spring-pet-clinic || true"
+            sh "ls -la /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp"
 
             changedServices.each { service ->
               def imageName = "mytruong28022004/${service}"
-              sh """
-                docker run --rm -v "$PWD":/workdir mikefarah/yq e "(.${service}.image.tag) = \"${IMAGE_TAG}\"" -i "/workdir/${valuesFile}"
-              """
+
+                sh """
+                    docker run --rm -u 0 -v /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp:/workdir mikefarah/yq e '.spring-petclinic-customers-service.image.tag = "${IMAGE_TAG}"' -i /workdir/spring-pet-clinic/values_dev.yaml
+                """
             }
 
-            sh "git config user.email 'jenkins@example.com'"
-            sh "git config user.name 'jenkins'"
+            sh "git config --global user.email 'thmt.thu@gmail.com'"
+            sh "git config --global user.name 'thmthu'"
             sh "git add ${valuesFile}"
             sh "git commit -m 'Update image tags to ${env.IMAGE_TAG} for services: ${env.CHANGED_SERVICES}'"
-            sh "git push origin main"
+           withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+              sh 'git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/thmthu/CD-for-pet-clinic.git'
+              sh 'git push origin master'
+            }
           }
         }
       }
