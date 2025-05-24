@@ -125,7 +125,7 @@ pipeline {
               def imageName = "mytruong28022004/${service}"
 
                 sh """
-                    docker run --rm -u 0 -v /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp:/workdir mikefarah/yq e '.spring-petclinic-customers-service.image.tag = "${IMAGE_TAG}"' -i /workdir/spring-pet-clinic/values_dev.yaml
+                    docker run --rm -u 0 -v /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp:/workdir mikefarah/yq e '.${service}.image.tag = "${IMAGE_TAG}"' -i /workdir/${valuesFile}
                 """
             }
 
