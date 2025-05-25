@@ -3,10 +3,15 @@ pipeline {
   environment {
     DOCKER_CREDENTIALS_ID = 'docker-hub-cred'
     REPO_URL = 'https://github.com/MyTruong28022004/spring-petclinic-microservices-fork.git'
+    HELM_REPO_URL = 'https://github.com/thmthu/CD-for-pet-clinic.git'
+    HELM_REPO_DIR = 'CD-for-pet-clinic'
+    GIT_CREDENTIALS_ID = 'thmthu-git'
   }
+
   parameters {
     string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
   }
+
   stages {
     stage('Checkout') {
       steps {
@@ -41,6 +46,18 @@ pipeline {
       }
     }
 
+    stage('Determine Image Tag') {
+      steps {
+        script {
+          def tag = sh(script: "git describe --tags --exact-match HEAD || echo ''", returnStdout: true).trim()
+          def commitId = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+          env.IMAGE_TAG = tag ? tag : commitId
+          echo "Using IMAGE_TAG=${env.IMAGE_TAG}"
+          env.HAS_TAG = tag ? "true" : "false"
+        }
+      }
+    }
+
     stage('Skip Build (No Services Changed)') {
       when {
         not {
@@ -58,10 +75,8 @@ pipeline {
       }
       steps {
         script {
-          def commitId = sh(script: 'git rev-parse HEAD', returnStdout: true).trim().take(7)
           def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
 
-          // Ánh xạ service -> image name
           def imageMap = [
             'spring-petclinic-customers-service': 'mytruong28022004/spring-petclinic-customers-service',
             'spring-petclinic-vets-service'    : 'mytruong28022004/spring-petclinic-vets-service',
@@ -75,16 +90,15 @@ pipeline {
 
           changedServices.each { service ->
             def imageName = imageMap[service]
-            echo "Building and pushing image for: ${service} as ${imageName}"
+            echo "Building and pushing image for: ${service} as ${imageName}:${env.IMAGE_TAG}"
 
             dir(service) {
-              // Build image using Maven wrapper and Docker profile
               sh "../mvnw clean install -P buildDocker -DskipTests"
 
               withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                 sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
-                sh "docker tag ${imageName} ${imageName}:${commitId}"
-                sh "docker push ${imageName}:${commitId}"
+                sh "docker tag ${imageName} ${imageName}:${env.IMAGE_TAG}"
+                sh "docker push ${imageName}:${env.IMAGE_TAG}"
                 sh "docker push ${imageName}:latest"
               }
             }
@@ -92,7 +106,43 @@ pipeline {
         }
       }
     }
+
+    stage('Clone Helm Repo and Overwrite Tag') {
+      when {
+        expression { return env.CHANGED_SERVICES?.trim() }
+      }
+      steps {
+        dir('cd-temp') {
+          git url: "${HELM_REPO_URL}", credentialsId: "${GIT_CREDENTIALS_ID}", branch: "master"
+
+          script {
+            def valuesFile = env.HAS_TAG == 'true' ? 'spring-pet-clinic/values_staging.yaml' : 'spring-pet-clinic/values_dev.yaml'
+            def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
+
+            sh "ls -la /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp"
+
+            changedServices.each { service ->
+              def imageName = "mytruong28022004/${service}"
+
+                sh """
+                    docker run --rm -u 0 -v /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp:/workdir mikefarah/yq e '.${service}.image.tag = "${IMAGE_TAG}"' -i /workdir/${valuesFile}
+                """
+            }
+
+            sh "git config --global user.email 'thmt.thu@gmail.com'"
+            sh "git config --global user.name 'thmthu'"
+            sh "git add ${valuesFile}"
+            sh "git commit -m 'Update image tags to ${env.IMAGE_TAG} for services: ${env.CHANGED_SERVICES}'"
+           withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+              sh 'git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/thmthu/CD-for-pet-clinic.git'
+              sh 'git push origin master'
+            }
+          }
+        }
+      }
+    }
   }
+
   post {
     always {
       echo "Cleaning up Docker images..."
