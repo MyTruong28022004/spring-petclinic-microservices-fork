@@ -12,10 +12,10 @@ spring:
       on-profile: docker
     import: configserver:http://config-server:8888
     
-spring:
-  zipkin:
-    base-url: http://zipkin.observability:9411
-    enabled: true
-  sleuth:
-    sampler:
+management:
+  tracing:
+    sampling:
       probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
