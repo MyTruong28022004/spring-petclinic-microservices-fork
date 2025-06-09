@@ -111,7 +111,7 @@ public class Owner {
     public String getAddress() {
         return this.address;
     }
-    // LaLa
+    
     public String getCity() {
         return this.city;
     }
