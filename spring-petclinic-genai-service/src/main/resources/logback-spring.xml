@@ -2,5 +2,18 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <!-- Required for Loglevel managment into the Spring Petclinic Admin Server-->
+    <!-- Ghi traceId, spanId vào mỗi log line -->
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-}] [%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
     <jmxConfigurator/>
 </configuration>
