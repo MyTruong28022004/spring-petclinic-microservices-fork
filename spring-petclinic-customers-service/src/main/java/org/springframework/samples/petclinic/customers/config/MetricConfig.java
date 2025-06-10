@@ -1,7 +1,7 @@
 package org.springframework.samples.petclinic.customers.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.config.MeterFilter;
+import io.micrometer.core.instrument.MeterFilter;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.aop.TimedAspect;
@@ -22,13 +22,8 @@ public class MetricConfig {
         return registry -> {
             registry.config().commonTags("application", "petclinic");
 
-            // Thêm MeterFilter để inject trace_id nếu tồn tại
+            // Gắn trace_id vào từng metric
             registry.config().meterFilter(new MeterFilter() {
-                @Override
-                public MeterFilterReply accept(io.micrometer.core.instrument.Meter.Id id) {
-                    return MeterFilterReply.NEUTRAL;
-                }
-
                 @Override
                 public io.micrometer.core.instrument.Meter.Id map(io.micrometer.core.instrument.Meter.Id id) {
                     Span span = Span.current();
