@@ -5,6 +5,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 
 @Configuration
 public class MetricConfig {
@@ -19,4 +23,15 @@ public class MetricConfig {
     return new TimedAspect(registry);
   }
 
+  @Bean
+  public MeterFilter traceIdMeterFilter() {
+    return MeterFilter.commonTags(() -> {
+      Span span = Span.current();
+      SpanContext context = span.getSpanContext();
+      if (context.isValid()) {
+        return Tags.of("trace_id", context.getTraceId());
+      }
+      return Tags.empty();
+    });
+  }
 }
