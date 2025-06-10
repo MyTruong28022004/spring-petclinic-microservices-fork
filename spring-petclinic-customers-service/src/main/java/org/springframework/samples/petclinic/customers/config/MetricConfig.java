@@ -9,14 +9,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MetricConfig {
 
-  @Bean
-  MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
-      return registry -> registry.config().commonTags("application", "petclinic");
-  }
+    // Gắn tag cố định "application=petclinic" cho tất cả metrics
+    @Bean
+    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
+        return registry -> registry.config().commonTags("application", "petclinic");
+    }
 
-  @Bean
-  TimedAspect timedAspect(MeterRegistry registry) {
-    return new TimedAspect(registry);
-  }
+    // Gắn thêm traceId từ MDC vào mỗi metric nếu có (dành cho Sleuth / OpenTelemetry)
+    @Bean
+    public MeterFilter traceIdMeterFilter() {
+        return MeterFilter.commonTags(() -> {
+            String traceId = MDC.get("traceId");
+            return Tags.of("traceId", traceId != null ? traceId : "unknown");
+        });
+    }
 
+    // Cho phép sử dụng @Timed để đo thời gian thực thi method
+    @Bean
+    TimedAspect timedAspect(MeterRegistry registry) {
+        return new TimedAspect(registry);
+    }
 }
