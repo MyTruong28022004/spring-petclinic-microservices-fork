@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.micrometer.core.instrument.Tags;
 
 @Configuration
 public class MetricConfig {
@@ -29,7 +30,7 @@ public class MetricConfig {
       Span span = Span.current();
       SpanContext context = span.getSpanContext();
       if (context.isValid()) {
-        return Tags.of("trace_id", context.getTraceId());
+        return Tags.of("traceId", context.getTraceId());
       }
       return Tags.empty();
     });
