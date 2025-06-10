@@ -22,7 +22,7 @@ public class MetricConfig {
     public MeterFilter traceIdMeterFilter() {
         return MeterFilter.commonTags(() -> {
             String traceId = MDC.get("traceId");
-            return Tags.of("traceId", traceId != null ? traceId : "unknown");
+            return (Iterable<Tag>) Tags.of("traceId", traceId != null ? traceId : "unknown");
         });
     }
 
