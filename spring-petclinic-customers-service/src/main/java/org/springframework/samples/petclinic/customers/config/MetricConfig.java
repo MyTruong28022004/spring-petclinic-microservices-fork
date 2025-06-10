@@ -18,10 +18,12 @@ public class MetricConfig {
         return registry -> registry.config().commonTags("application", "petclinic");
     }
 
-    // Cách đúng để thêm traceId động từ MDC vào metrics
     @Bean
     public MeterFilter traceIdMeterFilter() {
-        return MeterFilter.commonTags(() -> Tags.of("traceId", MDC.get("traceId") != null ? MDC.get("traceId") : "unknown"));
+        return MeterFilter.commonTags(() -> {
+            String traceId = MDC.get("traceId");
+            return Collections.singletonList(Tag.of("traceId", traceId != null ? traceId : "unknown"));
+        });
     }
 
     @Bean
