@@ -3,12 +3,13 @@ package org.springframework.samples.petclinic.customers.config;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.config.MeterFilter;
 import org.slf4j.MDC;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Collections;
 
 @Configuration
 public class MetricConfig {
@@ -22,7 +23,7 @@ public class MetricConfig {
     public MeterFilter traceIdMeterFilter() {
         return MeterFilter.commonTags(() -> {
             String traceId = MDC.get("traceId");
-            return Tags.of("traceId", traceId != null ? traceId : "unknown");
+            return Collections.singletonList(Tag.of("traceId", traceId != null ? traceId : "unknown"));
         });
     }
 
