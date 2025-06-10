@@ -135,7 +135,7 @@ public class Owner {
     public void setCity(String city) {
         this.city = city;
     }
-    
+    //LaLa
     public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
