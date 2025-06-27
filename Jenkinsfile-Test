@@ -107,36 +107,62 @@ pipeline {
       }
     }
 
-    stage('Clone Helm Repo and Overwrite Tag') {
-      when {
-        expression { return env.CHANGED_SERVICES?.trim() }
-      }
-      steps {
-        dir('cd-temp') {
-          git url: "${HELM_REPO_URL}", credentialsId: "${GIT_CREDENTIALS_ID}", branch: "master"
-
-          script {
-            def valuesFile = env.HAS_TAG == 'true' ? 'spring-pet-clinic/values_staging.yaml' : 'spring-pet-clinic/values_dev.yaml'
-            def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
-
-            sh "ls -la /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp"
-
-            changedServices.each { service ->
-              def imageName = "mytruong28022004/${service}"
-
-                sh """
-                    docker run --rm -u 0 -v /var/lib/jenkins/workspace/spring-petclinic-microservices-fork/cd-temp:/workdir mikefarah/yq e '.${service}.image.tag = "${IMAGE_TAG}"' -i /workdir/${valuesFile}
-                """
+  stage('Clone Helm Repo and Overwrite Tag') {
+    when {
+      expression { return env.CHANGED_SERVICES?.trim() }
+    }
+    steps {
+      dir('cd-temp') {
+        git url: "${HELM_REPO_URL}", credentialsId: "${GIT_CREDENTIALS_ID}", branch: "master"
+  
+        script {
+          def valuesFile = env.HAS_TAG == 'true' ? 'spring-pet-clinic/values_staging.yaml' : 'spring-pet-clinic/values_dev.yaml'
+          def changedServices = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
+  
+          // Map tên service -> key trong file values.yaml
+          def helmKeyMap = [
+            'spring-petclinic-config-server'     : 'config',
+            'spring-petclinic-discovery-server'  : 'discovery',
+            'spring-petclinic-api-gateway'       : 'gateway',
+            'spring-petclinic-customers-service' : 'customers',
+            'spring-petclinic-visits-service'    : 'visits',
+            'spring-petclinic-vets-service'      : 'vets',
+            'spring-petclinic-admin-server'      : 'admin'
+          ]
+  
+          // In thư mục để debug
+          sh "ls -la /var/lib/jenkins/workspace/${env.JOB_NAME}/cd-temp"
+  
+          changedServices.each { service ->
+            def yamlKey = helmKeyMap[service]
+            if (!yamlKey) {
+              error "Không tìm thấy mapping cho service: ${service}"
             }
-
-            sh "git config --global user.email 'thmt.thu@gmail.com'"
-            sh "git config --global user.name 'thmthu'"
-            sh "git add ${valuesFile}"
+  
+            echo "Updating tag for ${yamlKey} -> ${env.IMAGE_TAG}"
+  
+            // Cập nhật tag trong values file
+            sh """
+              docker run --rm -u 0 -v \$(pwd):/workdir mikefarah/yq \
+              e '.${yamlKey}.image.tag = "${env.IMAGE_TAG}"' -i /workdir/${valuesFile}
+            """
+          }
+  
+          // Commit và push nếu có thay đổi
+          sh "git config --global user.email 'thmt.thu@gmail.com'"
+          sh "git config --global user.name 'thmthu'"
+          sh "git add ${valuesFile}"
+  
+          // Chỉ commit nếu có thay đổi thực sự
+          def changes = sh(script: "git diff --cached --quiet || echo 'has-changes'", returnStdout: true).trim()
+          if (changes == 'has-changes') {
             sh "git commit -m 'Update image tags to ${env.IMAGE_TAG} for services: ${env.CHANGED_SERVICES}'"
-           withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+            withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
               sh 'git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/thmthu/CD-for-pet-clinic.git'
               sh 'git push origin master'
             }
+          } else {
+            echo "Không có thay đổi trong file Helm values, bỏ qua commit."
           }
         }
       }
