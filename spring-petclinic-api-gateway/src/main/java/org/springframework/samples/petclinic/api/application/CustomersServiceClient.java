@@ -31,7 +31,7 @@ public class CustomersServiceClient {
     public CustomersServiceClient(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
-
+    //LaLa
     public Mono<OwnerDetails> getOwner(final int ownerId) {
         return webClientBuilder.build().get()
             .uri("http://customers-service/owners/{ownerId}", ownerId)

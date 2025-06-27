@@ -72,6 +72,7 @@ public class AIDataProvider {
 	            .uri(ownersHostname + "owners")
 	            .bodyValue(ownerRequest)
 	            .retrieve().bodyToMono(OwnerDetails.class).block());
+				//LaLa
 	}
 
 }
