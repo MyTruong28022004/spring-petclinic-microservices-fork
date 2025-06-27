@@ -86,5 +86,6 @@ public class ApiGatewayApplication {
             .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
             .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(10)).build())
             .build());
+            //LaLa
     }
 }
