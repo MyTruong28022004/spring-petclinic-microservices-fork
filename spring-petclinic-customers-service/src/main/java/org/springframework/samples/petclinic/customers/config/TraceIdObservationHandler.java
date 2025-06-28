@@ -16,11 +16,14 @@ public class TraceIdObservationHandler implements ObservationHandler<Observation
     }
 
     @Override
-    public void onStart(Context context) {
+    public void onScopeOpened(Context context) {
         String traceId = tracer.currentSpan() != null
                 ? tracer.currentSpan().context().traceIdString()
                 : "unknown";
+
         context.addLowCardinalityKeyValue(io.micrometer.common.KeyValue.of("trace_id", traceId));
+
+        System.out.println("[TRACE] Attached trace_id=" + traceId + " to observation");
     }
 
     @Override
@@ -28,4 +31,3 @@ public class TraceIdObservationHandler implements ObservationHandler<Observation
         return true;
     }
 }
-
