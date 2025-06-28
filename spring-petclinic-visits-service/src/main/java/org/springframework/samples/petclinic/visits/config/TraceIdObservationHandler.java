@@ -1,0 +1,33 @@
+package org.springframework.samples.petclinic.visits.config;
+
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationHandler;
+import io.micrometer.observation.Observation.Context;
+import brave.Tracer;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TraceIdObservationHandler implements ObservationHandler<Observation.Context> {
+
+    private final Tracer tracer;
+
+    public TraceIdObservationHandler(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    @Override
+    public void onScopeOpened(Context context) {
+        String traceId = tracer.currentSpan() != null
+                ? tracer.currentSpan().context().traceIdString()
+                : "unknown";
+
+        context.addLowCardinalityKeyValue(io.micrometer.common.KeyValue.of("trace_id", traceId));
+
+        System.out.println("[TRACE] Attached trace_id=" + traceId + " to observation");
+    }
+
+    @Override
+    public boolean supportsContext(Context context) {
+        return true;
+    }
+}
